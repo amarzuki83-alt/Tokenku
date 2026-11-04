@@ -24,7 +24,7 @@ async function preprocessImage(imageSource: File | Blob | string): Promise<strin
         return;
       }
 
-      // Upscale if below 1600px so small receipt text (like "Nama Pelanggan") has crisp raster edges
+      // Upscale if below 1600px so small receipt text has crisp raster edges
       const targetMinDimension = 1600;
       let width = img.width;
       let height = img.height;
@@ -96,15 +96,17 @@ export async function runLocalOcr(
  */
 const SYSTEM_WORDS_BLACKLIST = new Set([
   'PLN', 'TOKEN', 'PRABAYAR', 'PASCABAYAR', 'STRUK', 'PEMBELIAN', 'PEMBAYARAN',
-  'TAGIHAN', 'TRANSAKSI', 'BERHASIL', 'SUKSES', 'DETAIL', 'STATUS', 'INFORMASI',
-  'TANGGAL', 'WAKTU', 'JAM', 'NO', 'NOMOR', 'METER', 'MSN', 'MTR', 'IDPEL', 'ID',
-  'TARIF', 'DAYA', 'VA', 'KWH', 'STROOM', 'REF', 'NOREF', 'BANK', 'BCA', 'BRI',
-  'BRIMO', 'BNI', 'MANDIRI', 'LIVIN', 'DANA', 'GOPAY', 'OVO', 'SHOPEEPAY', 'FLIP',
-  'LINKAJA', 'ALFAMART', 'INDOMARET', 'LOKET', 'KASIR', 'AGEN', 'RP', 'RUPIAH',
-  'ADMIN', 'TOTAL', 'BAYAR', 'BIAYA', 'PPN', 'MATERAI', 'PPJ', 'ANGSURAN',
-  'CATATAN', 'TERIMA KASIH', 'TERIMAKASIH', 'CUSTOMER', 'PELANGGAN', 'KONSUMEN',
-  'PENERIMA', 'PENGGUNA', 'PEMBELI', 'SUMBER', 'REKENING', 'METODE', 'BUKTI',
-  'KODE', 'PRODUK', 'SN', 'SERIAL', 'NOMINAL', 'DENOM'
+  'TAGIHAN', 'JUMLAH', 'BIAYA', 'TRANSAKSI', 'BERHASIL', 'SUKSES', 'DETAIL',
+  'STATUS', 'INFORMASI', 'TANGGAL', 'WAKTU', 'JAM', 'NO', 'NOMOR', 'METER',
+  'MSN', 'MTR', 'IDPEL', 'ID', 'DPE', 'DPEL', 'TARIF', 'DAYA', 'VA', 'KWH', 'STROOM',
+  'REF', 'NOREF', 'BANK', 'BCA', 'BRI', 'BRIMO', 'BNI', 'MANDIRI', 'LIVIN', 'DANA',
+  'GOPAY', 'OVO', 'SHOPEEPAY', 'FLIP', 'LINKAJA', 'ALFAMART', 'INDOMARET', 'LOKET',
+  'KASIR', 'AGEN', 'RP', 'RUPIAH', 'ADMIN', 'TOTAL', 'BAYAR', 'PPN', 'MATERAI',
+  'PPJ', 'PBJT', 'PBJT-TL', 'ANGSURAN', 'CATATAN', 'TERIMA KASIH', 'TERIMAKASIH',
+  'CUSTOMER', 'PELANGGAN', 'KONSUMEN', 'PENERIMA', 'PENGGUNA', 'PEMBELI', 'SUMBER',
+  'REKENING', 'METODE', 'BUKTI', 'KODE', 'PRODUK', 'SN', 'SERIAL', 'NOMINAL',
+  'DENOM', 'EVERYDAY', 'ACCOUNT', 'TMRW', 'UOB', 'KOMENTAR', 'LANGSUNG', 'CALL',
+  'CENTER', 'HUBUNGI', 'WIB'
 ]);
 
 /**
@@ -122,16 +124,16 @@ function isValidCustomerName(candidate: string): boolean {
   // Cannot be purely numbers, dates, or timestamps
   if (/^[\d\s./:-]+$/.test(upper)) return false;
 
-  // Split into words
-  const words = upper.split(/\s+/).filter((w) => w.length > 0);
+  const words = upper.split(/\s+/).filter(Boolean);
   if (words.length === 0) return false;
 
-  // Check if every single word in candidate is blacklisted
-  const allBlacklisted = words.every((w) => SYSTEM_WORDS_BLACKLIST.has(w));
-  if (allBlacklisted) return false;
+  // If any word is a system keyword (like JUMLAH, TAGIHAN, TRANSAKSI, etc.), reject
+  for (const w of words) {
+    if (SYSTEM_WORDS_BLACKLIST.has(w)) return false;
+  }
 
-  // If first word is blacklisted and only 1 word, reject
-  if (words.length === 1 && SYSTEM_WORDS_BLACKLIST.has(words[0])) return false;
+  // Reject abbreviations
+  if (['DPE', 'IDP', 'MSN', 'KWH', 'VA', 'TRF', 'ADM', 'RP'].includes(upper)) return false;
 
   // Reject if it contains tariff or currency markers
   if (/\b(?:VA|KWH|WATT|IDR|RUPIAH)\b/i.test(upper)) return false;
@@ -157,7 +159,7 @@ function cleanCustomerName(candidate: string): string {
   // Remove trailing standalone 10-12 digit numbers (like attached IDPEL)
   clean = clean.replace(/\s+\d{10,12}$/, '');
 
-  // Remove non-name symbols like colons, semicolons, brackets, equals
+  // Remove non-name symbols
   clean = clean.replace(/[;:=[\]{}<>*_#~]/g, ' ');
 
   // Collapse consecutive spaces
@@ -170,14 +172,10 @@ function cleanCustomerName(candidate: string): string {
  * Robust multi-strategy extractor for customer name from Indonesian receipts & screenshots.
  */
 function extractCustomerNameFromText(rawText: string, lines: string[]): string {
-  // Strategy 1: Look for explicit labels (Same-line and Next-line detection)
+  // Strategy 1: Explicit labels (Same-line and Next-line detection)
   const labelPatterns = [
-    // Standard labels
     /^(?:NAMA\s*PELANGGAN|NAMA\s*PLG|NAMA\s*KONSUMEN|NAMA\s*PENERIMA|NAMA\s*PENGGUNA|NAMA\s*PEMBELI|NAMA\s*AKUN|NAMA\s*TUJUAN|ATAS\s*NAMA|A\s*\/\s*N|CUSTOMER\s*NAME|CUSTOMER|NM\s*PLG|PLG|NAMA)\b[:.\s-=/]*(.*)$/i,
-    // Fuzzy OCR misreads for "NAMA" (e.g. NANA, NAM4, N4MA, MANA)
     /^(?:NANA|NAM4|N4MA|MANA)\s*(?:PELANGGAN|PLG)?\b[:.\s-=/]*(.*)$/i,
-    // Connected labels (e.g. NAMAPELANGGAN, ATASNAMA)
-    /^(?:NAMAPELANGGAN|NAMAPLG|ATASNAMA)\b[:.\s-=/]*(.*)$/i,
   ];
 
   for (let i = 0; i < lines.length; i++) {
@@ -193,8 +191,7 @@ function extractCustomerNameFromText(rawText: string, lines: string[]): string {
           return cleanedSameLine;
         }
 
-        // 1B. Label is alone on this line; the name is on the NEXT line (line i + 1)
-        // Extremely common in e-wallets (Dana, GoPay, OVO, ShopeePay) and m-banking (Livin, BCA, BRImo)
+        // 1B. Label is alone on this line; the name is on the NEXT line
         if (i + 1 < lines.length) {
           const nextLine = lines[i + 1].trim();
           const cleanedNextLine = cleanCustomerName(nextLine);
@@ -202,20 +199,36 @@ function extractCustomerNameFromText(rawText: string, lines: string[]): string {
             return cleanedNextLine;
           }
         }
-
-        // 1C. Check line i + 2 in case of an empty line or bullet point
-        if (i + 2 < lines.length) {
-          const line2 = lines[i + 2].trim();
-          const cleanedLine2 = cleanCustomerName(line2);
-          if (isValidCustomerName(cleanedLine2)) {
-            return cleanedLine2;
-          }
-        }
       }
     }
   }
 
-  // Strategy 2: Inline search within lines (e.g. "IDPEL: 537210987654  NAMA: BUDI SANTOSO")
+  // Strategy 2: Directly inspect line right after 11-12 digit IDPEL/NO METER and before TARIF/DAYA
+  // This is the standard physical and banking layout (e.g. UOB, BCA, DANA) where NAMA label might be faint
+  let idpelLineIdx = -1;
+  let tarifLineIdx = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (/^\d{11,12}$/.test(l)) {
+      idpelLineIdx = i;
+    }
+    if ((l.toUpperCase().includes('TARIF') || l.toUpperCase().includes('DAYA')) && tarifLineIdx === -1 && idpelLineIdx !== -1) {
+      tarifLineIdx = i;
+      break;
+    }
+  }
+
+  if (idpelLineIdx !== -1 && tarifLineIdx > idpelLineIdx) {
+    for (let i = idpelLineIdx + 1; i < tarifLineIdx; i++) {
+      const candidate = cleanCustomerName(lines[i]);
+      if (isValidCustomerName(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  // Strategy 3: Inline search within lines (e.g. "IDPEL: 537210987654  NAMA: BUDI SANTOSO")
   for (const line of lines) {
     const inlineMatch = line.match(/\b(?:NAMA|PLG|A\/N|CUSTOMER)\b[^a-zA-Z0-9:]*[:=]\s*([a-zA-Z\s.,'/-]{2,40})/i);
     if (inlineMatch) {
@@ -226,54 +239,63 @@ function extractCustomerNameFromText(rawText: string, lines: string[]): string {
     }
   }
 
-  // Strategy 3: Check between IDPEL/NO METER and TARIF/DAYA lines
-  // Standard PLN receipt layout:
-  // - IDPEL / NO METER line
-  // - [CUSTOMER NAME LINE]
-  // - TARIF / DAYA line
-  let idpelIdx = -1;
-  let tarifIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    const upper = lines[i].toUpperCase();
-    if (upper.includes('IDPEL') || upper.includes('NO METER') || upper.includes('METER') || upper.includes('MSN')) {
-      idpelIdx = i;
-    }
-    if ((upper.includes('TARIF') || upper.includes('DAYA') || upper.includes('VA') || upper.includes('KWH')) && tarifIdx === -1 && idpelIdx !== -1) {
-      tarifIdx = i;
-    }
-  }
-
-  if (idpelIdx !== -1 && tarifIdx > idpelIdx) {
-    for (let i = idpelIdx + 1; i < tarifIdx; i++) {
-      const candidate = cleanCustomerName(lines[i]);
-      if (isValidCustomerName(candidate)) {
-        return candidate;
-      }
-    }
-  }
-
-  // Strategy 4: Table pattern "11-12 digits <NAME> <TARIFF/DAYA>"
-  // e.g. "537210987654 BUDI SANTOSO R1/900VA"
-  const tableMatch = rawText.match(/\b\d{11,12}\s+([A-Z\s.]{3,35})\s+(?:R1|R2|R3|B1|B2|I1|S1|\d{3,5}\s*VA)/i);
-  if (tableMatch) {
-    const candidate = cleanCustomerName(tableMatch[1]);
-    if (isValidCustomerName(candidate)) {
-      return candidate;
-    }
-  }
-
-  // Strategy 5: Look for any line that is purely alphabetic (2 to 4 capitalized words)
+  // Strategy 4: Fallback to any line containing a person name format (e.g. "M. AFIFUDDIN" or 2-3 words)
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (/^[A-Za-z\s.,'-]{4,35}$/.test(trimmed)) {
-      const cleaned = cleanCustomerName(trimmed);
-      if (isValidCustomerName(cleaned) && cleaned.split(/\s+/).length >= 2) {
+    const cleaned = cleanCustomerName(line);
+    if (/^(?:[A-Z]\.\s+)?[A-Z]{3,}(?:\s+[A-Z]{3,})+$/.test(cleaned) || /^[A-Z]\.\s+[A-Z]{3,}$/.test(cleaned)) {
+      if (isValidCustomerName(cleaned)) {
         return cleaned;
       }
     }
   }
 
   return '';
+}
+
+/**
+ * Extracts the exact PLN token purchase nominal.
+ * Ensures round denominations (20k, 50k, 100k, 200k, 500k, 1M) are selected over net tariff/tax figures.
+ */
+function extractTokenNominal(rawText: string): number {
+  const PLN_DENOMS = [5000000, 1000000, 500000, 200000, 100000, 50000, 20000];
+
+  // Check if RP BAYAR or TAGIHAN or PEMBELIAN contains a standard PLN round denomination
+  const payMatch = rawText.match(/(?:RP\s*BAYAR|TAGIHAN|JUMLAH\s*TAGIHAN|TOTAL\s*BAYAR|PEMBELIAN|BELI|DENOM)[^0-9]*([1-9][0-9]{0,2}(?:[.,][0-9]{3})+|[0-9]{5,7})/i);
+  if (payMatch) {
+    const val = parseNumberOnly(payMatch[1]);
+    if (PLN_DENOMS.includes(val)) {
+      return val;
+    }
+  }
+
+  // Check if any standard PLN denom appears as "Rp XX.000" in the text
+  for (const denom of PLN_DENOMS) {
+    const dotted = denom.toLocaleString('id-ID'); // "50.000"
+    const regex = new RegExp(`(?:RP|TAGIHAN|BAYAR)[^0-9]*\\b${dotted}\\b`, 'i');
+    if (regex.test(rawText)) {
+      return denom;
+    }
+  }
+
+  // Next check standalone standard denoms
+  for (const denom of PLN_DENOMS) {
+    const dotted = denom.toLocaleString('id-ID');
+    if (rawText.includes(dotted)) {
+      return denom;
+    }
+  }
+
+  // General fallback
+  const generalPattern = /(?:RP|RUPIAH|BELI|PEMBELIAN|NOMINAL|DENOM)[^0-9]*([1-9][0-9]{0,2}(?:[.,][0-9]{3})+|[0-9]{5,7})/i;
+  const generalMatch = rawText.match(generalPattern);
+  if (generalMatch) {
+    const parsed = parseNumberOnly(generalMatch[1]);
+    if (parsed >= 10000 && parsed <= 50000000) {
+      return parsed;
+    }
+  }
+
+  return 50000;
 }
 
 /**
@@ -293,19 +315,16 @@ export function parseReceiptText(
 
   // 1. Extract 20-digit Stroom / Token
   let token = '';
-  // Pattern 1: XXXX-XXXX-XXXX-XXXX-XXXX or XXXX XXXX XXXX XXXX XXXX
   const groupedTokenRegex = /\b(\d{4})[-.\s](\d{4})[-.\s](\d{4})[-.\s](\d{4})[-.\s](\d{4})\b/;
   const groupedMatch = rawText.match(groupedTokenRegex);
   if (groupedMatch) {
     token = `${groupedMatch[1]}-${groupedMatch[2]}-${groupedMatch[3]}-${groupedMatch[4]}-${groupedMatch[5]}`;
   } else {
-    // Pattern 2: Consecutive 20 digits
     const continuousTokenRegex = /\b\d{20}\b/;
     const contMatch = rawText.match(continuousTokenRegex);
     if (contMatch) {
       token = formatToken(contMatch[0]);
     } else {
-      // Pattern 3: Look around STROOM / TOKEN
       const tokenHeaderIndex = fullText.search(/(STROOM|TOKEN|STROM)/);
       if (tokenHeaderIndex !== -1) {
         const sub = rawText.substring(tokenHeaderIndex, tokenHeaderIndex + 140);
@@ -327,7 +346,7 @@ export function parseReceiptText(
 
   // 3. Extract Idpel (11-12 digits)
   let idpel = '';
-  const idpelRegex = /(?:IDPEL|ID\s*PEL|ID\s*PELANGGAN|IDP)[^0-9:]*[:\s]*([0-9]{11,12})/i;
+  const idpelRegex = /(?:IDPEL|ID\s*PEL|ID\s*PELANGGAN|IDP|DPE)[^0-9:]*[:\s]*([0-9]{11,12})/i;
   const idpelMatch = rawText.match(idpelRegex);
   if (idpelMatch) {
     idpel = idpelMatch[1].trim();
@@ -348,20 +367,22 @@ export function parseReceiptText(
   // 4. Robust Extract Nama Pelanggan using multi-strategy engine
   const namaPelanggan = extractCustomerNameFromText(rawText, lines);
 
-  // 5. Extract Tarif / Daya
+  // 5. Extract Tarif / Daya and clean leading zeros (e.g. R1M /000000900 VA -> R1M / 900 VA)
   let tarifDaya = '';
   const tarifRegex = /(?:TARIF\s*[/]?\s*DAYA|TARIF\/DAYA|TRF\/DAYA)[^a-zA-Z0-9:]*[:\s]*([A-Z0-9\s/]+(?:VA|WATT)?)/i;
   const tarifMatch = rawText.match(tarifRegex);
   if (tarifMatch) {
-    tarifDaya = tarifMatch[1].trim().split('\n')[0].replace(/(RP|JML|KWH).*/i, '').trim();
+    let rawTarif = tarifMatch[1].trim().split('\n')[0].replace(/(RP|JML|KWH).*/i, '').trim();
+    // Clean leading zeros from VA rating (e.g. /000000900 VA -> / 900 VA)
+    rawTarif = rawTarif.replace(/[/]\s*0*(\d{3,5})\s*VA/i, '/ $1 VA');
+    tarifDaya = rawTarif;
   } else {
-    // Look for standard PLN tariff patterns like R1/900VA, R1M/900 VA, R1/1300VA, B1/4500VA
-    const directPattern = /(R1M?|R2|R3|B1|B2|B3|I1|I2|P1|S1|S2)\s*[/]\s*(\d+)\s*(?:VA)?/i;
+    const directPattern = /(R1M?|R2|R3|B1|B2|B3|I1|I2|P1|S1|S2)\s*[/]\s*0*(\d+)\s*(?:VA)?/i;
     const directMatch = rawText.match(directPattern);
     if (directMatch) {
       tarifDaya = `${directMatch[1].toUpperCase()} / ${directMatch[2]} VA`;
     } else {
-      const vaOnly = /(\d{3,5})\s*VA/i;
+      const vaOnly = /0*(\d{3,5})\s*VA/i;
       const vaMatch = rawText.match(vaOnly);
       if (vaMatch) {
         tarifDaya = `R1 / ${vaMatch[1]} VA`;
@@ -371,15 +392,19 @@ export function parseReceiptText(
 
   // 6. Extract Jumlah kWh
   let kwh = '';
-  const kwhRegex = /(?:JML\s*KWH|JUMLAH\s*KWH|KWH)[^0-9:]*[:\s]*([0-9]+[.,]?[0-9]*)/i;
+  const kwhRegex = /(?:JML\s*KWH|JUMLAH\s*KWH|MLKWH|KWH)[^0-9:]*[:\s]*([0-9]+[.,]?[0-9]*)/i;
   const kwhMatch = rawText.match(kwhRegex);
   if (kwhMatch) {
-    kwh = kwhMatch[1].trim().replace(',', '.');
+    let cleanKwh = kwhMatch[1].trim().replace(',', '.');
+    // If OCR missed decimal comma, e.g. "337" -> "33.7"
+    if (!cleanKwh.includes('.') && cleanKwh.length === 3 && parseInt(cleanKwh, 10) > 100) {
+      cleanKwh = `${cleanKwh.slice(0, 2)}.${cleanKwh.slice(2)}`;
+    }
+    kwh = cleanKwh;
   }
 
   // 7. Extract Tanggal / Jam
   let tanggal = '';
-  // Look for format DD/MM/YYYY or DD-MM-YYYY with optional HH:mm:ss
   const dateRegex = /\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})(?:\s+(\d{1,2}:\d{2}(?::\d{2})?))?\b/;
   const dateMatch = rawText.match(dateRegex);
   if (dateMatch) {
@@ -387,7 +412,26 @@ export function parseReceiptText(
     const t = dateMatch[2] || '12:00:00';
     tanggal = `${d} ${t}`;
   } else {
-    tanggal = getCurrentDateTimeFormatted();
+    // Check Indonesian month names (e.g. "04 Nov 2026")
+    const indoDateRegex = /\b(\d{1,2})\s*(Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Sep|Okt|Nov|Des)[a-z]*\s*(\d{4})\b/i;
+    const indoMatch = rawText.match(indoDateRegex);
+    if (indoMatch) {
+      const months: Record<string, string> = {
+        jan: '01', feb: '02', mar: '03', apr: '04', mei: '05', jun: '06',
+        jul: '07', agu: '08', sep: '09', okt: '10', nov: '11', des: '12'
+      };
+      const day = indoMatch[1].padStart(2, '0');
+      const mStr = indoMatch[2].toLowerCase();
+      const month = months[mStr] || '11';
+      const year = indoMatch[3];
+
+      // Time match (e.g. "07:38 WIB")
+      const timeMatch = rawText.match(/(\d{1,2}:\d{2}(?::\d{2})?)\s*(?:WIB|WITA|WIT)?/i);
+      const timeStr = timeMatch ? timeMatch[1] : '12:00:00';
+      tanggal = `${day}/${month}/${year} ${timeStr}`;
+    } else {
+      tanggal = getCurrentDateTimeFormatted();
+    }
   }
 
   // 8. Extract No Referensi (No Ref)
@@ -400,29 +444,14 @@ export function parseReceiptText(
     noRef = generateRandomRef();
   }
 
-  // 9. Extract Nominal Pembelian Token
-  let nominal = 50000;
-  // Standard token values: 20000, 50000, 100000, 200000, 500000, 1000000
-  const nominalPattern = /(?:RP|RUPIAH|BELI|PEMBELIAN|NOMINAL|DENOM)[^0-9]*([1-9][0-9]{0,2}(?:[.,][0-9]{3})+|[0-9]{5,7})/i;
-  const nominalMatch = rawText.match(nominalPattern);
-  if (nominalMatch) {
-    const parsed = parseNumberOnly(nominalMatch[1]);
-    if (parsed >= 10000 && parsed <= 50000000) {
-      nominal = parsed;
-    }
-  }
+  // 9. Extract Nominal Token (Denomination e.g. Rp 50.000)
+  const nominal = extractTokenNominal(rawText);
 
-  // 10. Extract Admin Bank
-  let adminBank = defaultAdmin;
-  const adminPattern = /(?:ADMIN|BIAYA\s*ADMIN|BIAYA\s*BANK|ADM)[^0-9]*([0-9]{1,3}(?:[.,][0-9]{3})+|[0-9]{3,5})/i;
-  const adminMatch = rawText.match(adminPattern);
-  if (adminMatch) {
-    const parsed = parseNumberOnly(adminMatch[1]);
-    if (parsed >= 0 && parsed <= 25000) {
-      adminBank = parsed;
-    }
-  }
+  // 10. Admin Bank: ALWAYS DEFAULT TO defaultAdmin (Rp 5.000) as explicitly requested!
+  // Do not allow bank's Rp 0 to override the agent's markup.
+  const adminBank = defaultAdmin || 5000;
 
+  // Total Bayar: automatically calculated (Nominal + Admin Bank)
   const totalBayar = nominal + adminBank;
 
   return {
@@ -447,16 +476,16 @@ export function parseReceiptText(
 export const SAMPLE_RECEIPTS: { title: string; subtitle: string; data: Partial<PlnReceiptData> }[] = [
   {
     title: 'Token PLN Rp 50.000',
-    subtitle: 'R1 / 900 VA - Budi Santoso',
+    subtitle: 'R1M / 900 VA - M. Afifuddin (UOB TMRW)',
     data: {
-      tanggal: getCurrentDateTimeFormatted(),
-      noRef: generateRandomRef(),
-      noMeter: '14235678901',
-      idpel: '537210987654',
-      namaPelanggan: 'BUDI SANTOSO',
+      tanggal: '04/11/2026 07:38:00',
+      noRef: '2611043202676749',
+      noMeter: '14433568319',
+      idpel: '518031830937',
+      namaPelanggan: 'M. AFIFUDDIN',
       tarifDaya: 'R1M / 900 VA',
-      kwh: '33.2',
-      token: '4928-1934-8201-9482-1049',
+      kwh: '33.7',
+      token: '1548-4746-3651-5701-9313',
       nominal: 50000,
       adminBank: 5000,
       totalBayar: 55000,
