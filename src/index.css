@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@layer utilities {
+  /* Thermal receipt font styling */
+  .font-receipt {
+    font-family: 'Courier New', Courier, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Hide scrollbars on mobile tabs while retaining scrollability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Print Stylesheet for Thermal Bluetooth & System Paper Roll */
+@media print {
+  body {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+
+  .thermal-receipt-printable {
+    box-shadow: none !important;
+    border: none !important;
+    width: 58mm !important;
+    max-width: 58mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    color: #000000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  @page {
+    margin: 0;
+    size: 58mm auto;
+  }
+}

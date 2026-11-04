@@ -1,0 +1,6 @@
+{
+  "name": "tokenku - Struk PLN & Bukti Transfer",
+  "description": "Aplikasi PWA cetak struk token listrik PLN dan bukti transfer dengan OCR offline, Web Bluetooth printer thermal, dan export gambar struk.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

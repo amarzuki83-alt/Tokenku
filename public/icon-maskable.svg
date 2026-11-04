@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGradM" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="50%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+    <linearGradient id="boltGradM" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full bleed background for safe area maskable cropping -->
+  <rect width="512" height="512" fill="url(#bgGradM)"/>
+
+  <!-- Scaled down content inside 80% circle safe zone (diameter ~400px centered at 256,256) -->
+  <g transform="translate(51.2, 51.2) scale(0.8)">
+    <!-- Receipt -->
+    <path d="M 140 120 L 372 120 Q 384 120 384 132 L 384 360 L 364 348 L 344 360 L 324 348 L 304 360 L 284 348 L 264 360 L 244 348 L 224 360 L 204 348 L 184 360 L 164 348 L 144 360 L 128 350 L 128 132 Q 128 120 140 120 Z" fill="#ffffff" />
+    <rect x="160" y="152" width="100" height="12" rx="6" fill="#0284c7"/>
+    <rect x="312" y="152" width="40" height="12" rx="6" fill="#94a3b8"/>
+    <line x1="156" y1="184" x2="356" y2="184" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 4"/>
+    <rect x="156" y="200" width="200" height="16" rx="4" fill="#e0f2fe"/>
+    <rect x="164" y="228" width="80" height="8" rx="4" fill="#cbd5e1"/>
+    <rect x="260" y="228" width="96" height="8" rx="4" fill="#0284c7" opacity="0.8"/>
+
+    <!-- Lightning Bolt -->
+    <path d="M 276 170 L 190 290 L 248 290 L 224 380 L 322 254 L 264 254 Z" fill="url(#boltGradM)" stroke="#ca8a04" stroke-width="3" stroke-linejoin="round"/>
+    
+    <rect x="168" y="416" width="176" height="38" rx="19" fill="#0ea5e9"/>
+    <text x="256" y="441" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="3">TOKENKU</text>
+  </g>
+</svg>
