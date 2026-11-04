@@ -64,11 +64,9 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
   };
 
   const handleDownloadImage = async () => {
-    if (!receiptCardRef.current) return;
     try {
       setIsExporting(true);
-      const filename = `struk-pln-${receipt.namaPelanggan.replace(/\s+/g, '-').toLowerCase()}-${Date.now().toString().slice(-4)}.png`;
-      await downloadReceiptImage(receiptCardRef.current, filename);
+      await downloadReceiptImage(receipt, settings, viewStyle);
       showToast('Gambar struk PNG berhasil diunduh!');
     } catch (err) {
       console.error(err);
@@ -79,13 +77,11 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
   };
 
   const handleShareImage = async () => {
-    if (!receiptCardRef.current) return;
     try {
       setIsExporting(true);
-      const filename = `struk-pln-${receipt.namaPelanggan.replace(/\s+/g, '-').toLowerCase()}.png`;
-      const result = await shareReceiptImage(receiptCardRef.current, receipt, filename);
+      const result = await shareReceiptImage(receipt, settings, viewStyle);
       if (result.method === 'download-fallback') {
-        showToast('Gambar struk diunduh (browser belum mendukung share langsung file).');
+        showToast(result.message || 'Gambar struk berhasil diunduh ke HP.');
       } else if (result.shared) {
         showToast('Membuka menu bagikan...');
       }
