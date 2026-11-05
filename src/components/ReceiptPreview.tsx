@@ -14,7 +14,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { AppSettings, PlnReceiptData } from '../types/receipt';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, normalizeTarifDaya } from '../utils/formatters';
 import { copyReceiptText, downloadReceiptImage, shareReceiptImage } from '../utils/shareReceipt';
 import { bluetoothPrinter } from '../utils/bluetoothPrinter';
 
@@ -231,7 +231,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               <EditableRow label="NO METER" value={receipt.noMeter} field="noMeter" isBold />
               <EditableRow label="IDPEL" value={receipt.idpel} field="idpel" isBold />
               <EditableRow label="NAMA" value={receipt.namaPelanggan} field="namaPelanggan" isBold />
-              <EditableRow label="TARIF/DAYA" value={receipt.tarifDaya} field="tarifDaya" />
+              <EditableRow label="TARIF/DAYA" value={normalizeTarifDaya(receipt.tarifDaya)} field="tarifDaya" />
               <EditableRow label="JML KWH" value={`${receipt.kwh} kWh`} field="kwh" />
             </div>
 
@@ -386,7 +386,7 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
               <EditableRow label="Nama Pelanggan" value={receipt.namaPelanggan} field="namaPelanggan" isBold />
               <EditableRow label="No. Meter" value={receipt.noMeter} field="noMeter" isBold />
               <EditableRow label="IDPEL" value={receipt.idpel} field="idpel" isBold />
-              <EditableRow label="Tarif / Daya" value={receipt.tarifDaya} field="tarifDaya" />
+              <EditableRow label="Tarif / Daya" value={normalizeTarifDaya(receipt.tarifDaya)} field="tarifDaya" />
               <EditableRow label="Jumlah kWh" value={`${receipt.kwh} kWh`} field="kwh" />
             </div>
 

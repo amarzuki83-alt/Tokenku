@@ -1,6 +1,6 @@
 import { createWorker } from 'tesseract.js';
 import { PlnReceiptData } from '../types/receipt';
-import { formatToken, generateRandomRef, getCurrentDateTimeFormatted, parseNumberOnly } from './formatters';
+import { formatToken, generateRandomRef, getCurrentDateTimeFormatted, parseNumberOnly, normalizeTarifDaya } from './formatters';
 
 export interface OcrProgress {
   status: string;
@@ -367,28 +367,27 @@ export function parseReceiptText(
   // 4. Robust Extract Nama Pelanggan using multi-strategy engine
   const namaPelanggan = extractCustomerNameFromText(rawText, lines);
 
-  // 5. Extract Tarif / Daya and clean leading zeros (e.g. R1M /000000900 VA -> R1M / 900 VA)
-  let tarifDaya = '';
+  // 5. Extract Tarif / Daya and normalize (e.g. R1 /000000900 VA -> R1 / 900VA)
+  let rawTarifText = '';
   const tarifRegex = /(?:TARIF\s*[/]?\s*DAYA|TARIF\/DAYA|TRF\/DAYA)[^a-zA-Z0-9:]*[:\s]*([A-Z0-9\s/]+(?:VA|WATT)?)/i;
   const tarifMatch = rawText.match(tarifRegex);
   if (tarifMatch) {
-    let rawTarif = tarifMatch[1].trim().split('\n')[0].replace(/(RP|JML|KWH).*/i, '').trim();
-    // Clean leading zeros from VA rating (e.g. /000000900 VA -> / 900 VA)
-    rawTarif = rawTarif.replace(/[/]\s*0*(\d{3,5})\s*VA/i, '/ $1 VA');
-    tarifDaya = rawTarif;
+    rawTarifText = tarifMatch[1].trim().split('\n')[0].replace(/(RP|JML|KWH).*/i, '').trim();
   } else {
-    const directPattern = /(R1M?|R2|R3|B1|B2|B3|I1|I2|P1|S1|S2)\s*[/]\s*0*(\d+)\s*(?:VA)?/i;
+    const directPattern = /(R1M?|R1T?|R2|R3|B1|B2|B3|I1|I2|P1|S1|S2)\s*[/]?\s*0*(\d+)\s*(?:VA)?/i;
     const directMatch = rawText.match(directPattern);
     if (directMatch) {
-      tarifDaya = `${directMatch[1].toUpperCase()} / ${directMatch[2]} VA`;
+      rawTarifText = `${directMatch[1]} / ${directMatch[2]}VA`;
     } else {
       const vaOnly = /0*(\d{3,5})\s*VA/i;
       const vaMatch = rawText.match(vaOnly);
       if (vaMatch) {
-        tarifDaya = `R1 / ${vaMatch[1]} VA`;
+        rawTarifText = `R1 / ${vaMatch[1]}VA`;
       }
     }
   }
+
+  const tarifDaya = normalizeTarifDaya(rawTarifText);
 
   // 6. Extract Jumlah kWh
   let kwh = '';
@@ -460,7 +459,7 @@ export function parseReceiptText(
     noMeter: noMeter || '14235678901',
     idpel: idpel || '537210987654',
     namaPelanggan: namaPelanggan || 'PELANGGAN PLN',
-    tarifDaya: tarifDaya || 'R1 / 1300 VA',
+    tarifDaya: tarifDaya || 'R1 / 1300VA',
     kwh: kwh || '33.2',
     token: token || '1839-4920-5819-2049-1193',
     nominal,
@@ -476,14 +475,14 @@ export function parseReceiptText(
 export const SAMPLE_RECEIPTS: { title: string; subtitle: string; data: Partial<PlnReceiptData> }[] = [
   {
     title: 'Token PLN Rp 50.000',
-    subtitle: 'R1M / 900 VA - M. Afifuddin (UOB TMRW)',
+    subtitle: 'R1M / 900VA - M. Afifuddin (UOB TMRW)',
     data: {
       tanggal: '04/11/2026 07:38:00',
       noRef: '2611043202676749',
       noMeter: '14433568319',
       idpel: '518031830937',
       namaPelanggan: 'M. AFIFUDDIN',
-      tarifDaya: 'R1M / 900 VA',
+      tarifDaya: 'R1M / 900VA',
       kwh: '33.7',
       token: '1548-4746-3651-5701-9313',
       nominal: 50000,
@@ -494,14 +493,14 @@ export const SAMPLE_RECEIPTS: { title: string; subtitle: string; data: Partial<P
   },
   {
     title: 'Token PLN Rp 100.000',
-    subtitle: 'R1 / 1300 VA - Siti Rahmawati',
+    subtitle: 'R1 / 1300VA - Siti Rahmawati',
     data: {
       tanggal: getCurrentDateTimeFormatted(),
       noRef: generateRandomRef(),
       noMeter: '32091482710',
       idpel: '531928471029',
       namaPelanggan: 'SITI RAHMAWATI',
-      tarifDaya: 'R1 / 1300 VA',
+      tarifDaya: 'R1 / 1300VA',
       kwh: '65.8',
       token: '7182-3904-8192-4710-3849',
       nominal: 100000,
@@ -512,14 +511,14 @@ export const SAMPLE_RECEIPTS: { title: string; subtitle: string; data: Partial<P
   },
   {
     title: 'Token PLN Rp 200.000',
-    subtitle: 'R1 / 2200 VA - Hendra Gunawan',
+    subtitle: 'R1 / 2200VA - Hendra Gunawan',
     data: {
       tanggal: getCurrentDateTimeFormatted(),
       noRef: generateRandomRef(),
       noMeter: '14820938172',
       idpel: '539182740192',
       namaPelanggan: 'HENDRA GUNAWAN',
-      tarifDaya: 'R1 / 2200 VA',
+      tarifDaya: 'R1 / 2200VA',
       kwh: '131.6',
       token: '8291-0492-7481-9302-5819',
       nominal: 200000,

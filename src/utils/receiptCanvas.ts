@@ -1,5 +1,5 @@
 import { AppSettings, PlnReceiptData } from '../types/receipt';
-import { formatRupiah } from './formatters';
+import { formatRupiah, normalizeTarifDaya } from './formatters';
 
 /**
  * Generates a high-resolution, compact receipt image on a pure HTML5 Canvas.
@@ -116,7 +116,7 @@ function renderThermalReceipt(
   drawRow('NO METER', r.noMeter, true);
   drawRow('IDPEL', r.idpel, true);
   drawRow('NAMA', r.namaPelanggan, true);
-  drawRow('TARIF/DAYA', r.tarifDaya);
+  drawRow('TARIF/DAYA', normalizeTarifDaya(r.tarifDaya));
   drawRow('JML KWH', `${r.kwh} kWh`);
 
   y += 4;
@@ -269,7 +269,7 @@ function renderModernReceipt(
   drawModernRow('No. Meter', r.noMeter, true);
   drawModernRow('IDPEL', r.idpel, true);
   drawModernRow('Nama Pelanggan', r.namaPelanggan, true);
-  drawModernRow('Tarif / Daya', r.tarifDaya);
+  drawModernRow('Tarif / Daya', normalizeTarifDaya(r.tarifDaya));
   drawModernRow('Jumlah kWh', `${r.kwh} kWh`);
 
   y += 8;

@@ -1,5 +1,6 @@
 import { AppSettings, PlnReceiptData } from '../types/receipt';
 import { renderReceiptToCanvas } from './receiptCanvas';
+import { normalizeTarifDaya } from './formatters';
 
 /**
  * Generates an ultra-crisp PNG Blob of the receipt.
@@ -124,7 +125,7 @@ No Ref     : ${receipt.noRef}
 No Meter   : ${receipt.noMeter}
 Idpel      : ${receipt.idpel}
 Nama       : ${receipt.namaPelanggan}
-Tarif/Daya : ${receipt.tarifDaya}
+Tarif/Daya : ${normalizeTarifDaya(receipt.tarifDaya)}
 Jml kWh    : ${receipt.kwh} kWh
 --------------------------------
 *STROOM / TOKEN PLN:*

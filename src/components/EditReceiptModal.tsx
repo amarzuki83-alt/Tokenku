@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check, Dices, Sparkles, Building2, Calendar, Hash, User, Zap, DollarSign } from 'lucide-react';
 import { PlnReceiptData } from '../types/receipt';
-import { formatRupiah, formatToken, generateRandomRef, parseNumberOnly } from '../utils/formatters';
+import { formatRupiah, formatToken, generateRandomRef, normalizeTarifDaya, parseNumberOnly } from '../utils/formatters';
 
 interface EditReceiptModalProps {
   receipt: PlnReceiptData;
@@ -41,12 +41,15 @@ export const EditReceiptModal: React.FC<EditReceiptModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      ...formData,
+      tarifDaya: normalizeTarifDaya(formData.tarifDaya),
+    });
   };
 
   const NOMINAL_PRESETS = [20000, 50000, 100000, 200000, 500000, 1000000];
   const ADMIN_PRESETS = [0, 2500, 3000, 5000];
-  const DAYA_PRESETS = ['R1 / 450 VA', 'R1 / 900 VA', 'R1M / 900 VA', 'R1 / 1300 VA', 'R1 / 2200 VA', 'B1 / 4500 VA'];
+  const DAYA_PRESETS = ['R1 / 450VA', 'R1 / 900VA', 'R1M / 900VA', 'R1 / 1300VA', 'R1 / 2200VA', 'B1 / 4500VA'];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto">
@@ -151,8 +154,9 @@ export const EditReceiptModal: React.FC<EditReceiptModalProps> = ({
                   autoFocus={initialField === 'tarifDaya'}
                   value={formData.tarifDaya}
                   onChange={(e) => handleChange('tarifDaya', e.target.value.toUpperCase())}
+                  onBlur={() => handleChange('tarifDaya', normalizeTarifDaya(formData.tarifDaya))}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 uppercase focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-sky-500"
-                  placeholder="R1 / 1300 VA"
+                  placeholder="R1 / 900VA"
                 />
               </div>
               <div>

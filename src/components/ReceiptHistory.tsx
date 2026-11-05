@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Trash2, ArrowUpRight, Zap, Calendar, User, Hash, Clock, FileText } from 'lucide-react';
 import { PlnReceiptData } from '../types/receipt';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, normalizeTarifDaya } from '../utils/formatters';
 
 interface ReceiptHistoryProps {
   history: PlnReceiptData[];
@@ -114,7 +114,7 @@ export const ReceiptHistory: React.FC<ReceiptHistoryProps> = ({
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-mono text-slate-600">
                     <span>Mtr: {item.noMeter}</span>
                     <span>•</span>
-                    <span>Daya: {item.tarifDaya}</span>
+                    <span>Daya: {normalizeTarifDaya(item.tarifDaya)}</span>
                   </div>
 
                   {/* Token Highlight */}

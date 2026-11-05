@@ -22,7 +22,7 @@ import {
   clearReceiptHistory,
 } from './utils/storage';
 import { bluetoothPrinter } from './utils/bluetoothPrinter';
-import { formatToken, generateRandomRef, getCurrentDateTimeFormatted } from './utils/formatters';
+import { formatToken, generateRandomRef, getCurrentDateTimeFormatted, normalizeTarifDaya } from './utils/formatters';
 
 export default function App() {
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
@@ -32,7 +32,12 @@ export default function App() {
   // Default receipt on start initialized with first sample or latest history item
   const [currentReceipt, setCurrentReceipt] = useState<PlnReceiptData>(() => {
     const hist = loadReceiptHistory();
-    if (hist.length > 0) return hist[0];
+    if (hist.length > 0) {
+      return {
+        ...hist[0],
+        tarifDaya: normalizeTarifDaya(hist[0].tarifDaya),
+      };
+    }
     const sample = SAMPLE_RECEIPTS[0].data;
     const currentSettings = loadSettings();
     return {
@@ -42,7 +47,7 @@ export default function App() {
       noMeter: sample.noMeter || '14235678901',
       idpel: sample.idpel || '537210987654',
       namaPelanggan: sample.namaPelanggan || 'BUDI SANTOSO',
-      tarifDaya: sample.tarifDaya || 'R1M / 900 VA',
+      tarifDaya: normalizeTarifDaya(sample.tarifDaya || 'R1M / 900VA'),
       kwh: sample.kwh || '33.2',
       token: sample.token || '4928-1934-8201-9482-1049',
       nominal: sample.nominal || 50000,
@@ -111,7 +116,7 @@ export default function App() {
         noMeter: parsed.noMeter || '14235678901',
         idpel: parsed.idpel || '537210987654',
         namaPelanggan: parsed.namaPelanggan || 'PELANGGAN PLN',
-        tarifDaya: parsed.tarifDaya || 'R1 / 1300 VA',
+        tarifDaya: normalizeTarifDaya(parsed.tarifDaya || 'R1 / 1300VA'),
         kwh: parsed.kwh || '33.2',
         token: parsed.token || '1839-4920-5819-2049-1193',
         nominal: parsed.nominal || 50000,
@@ -145,7 +150,7 @@ export default function App() {
       noMeter: sampleData.noMeter || '14235678901',
       idpel: sampleData.idpel || '537210987654',
       namaPelanggan: sampleData.namaPelanggan || 'PELANGGAN PLN',
-      tarifDaya: sampleData.tarifDaya || 'R1 / 900 VA',
+      tarifDaya: normalizeTarifDaya(sampleData.tarifDaya || 'R1 / 900VA'),
       kwh: sampleData.kwh || '33.2',
       token: sampleData.token || '4928-1934-8201-9482-1049',
       nominal: sampleData.nominal || 50000,
@@ -173,7 +178,7 @@ export default function App() {
       noMeter: '',
       idpel: '',
       namaPelanggan: '',
-      tarifDaya: 'R1 / 900 VA',
+      tarifDaya: 'R1 / 900VA',
       kwh: '33.2',
       token: '',
       nominal: 50000,
@@ -189,8 +194,12 @@ export default function App() {
   };
 
   const handleSaveReceiptEdit = (updated: PlnReceiptData) => {
-    setCurrentReceipt(updated);
-    const updatedHistory = saveReceiptToHistory(updated);
+    const cleaned: PlnReceiptData = {
+      ...updated,
+      tarifDaya: normalizeTarifDaya(updated.tarifDaya),
+    };
+    setCurrentReceipt(cleaned);
+    const updatedHistory = saveReceiptToHistory(cleaned);
     setHistory(updatedHistory);
     setEditingField(null);
   };

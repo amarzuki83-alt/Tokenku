@@ -1,5 +1,5 @@
 import { AppSettings, PlnReceiptData } from '../types/receipt';
-import { formatRupiah } from './formatters';
+import { formatRupiah, normalizeTarifDaya } from './formatters';
 
 // Common Bluetooth Thermal Printer GATT Services & Characteristics
 const PRINTER_SERVICES = [
@@ -214,7 +214,7 @@ class BluetoothPrinterService {
     parts.push(...encoder.encode(this.formatRow('NO METER', data.noMeter, width)));
     parts.push(...encoder.encode(this.formatRow('IDPEL', data.idpel, width)));
     parts.push(...encoder.encode(this.formatRow('NAMA', data.namaPelanggan, width)));
-    parts.push(...encoder.encode(this.formatRow('TARIF/DAYA', data.tarifDaya, width)));
+    parts.push(...encoder.encode(this.formatRow('TARIF/DAYA', normalizeTarifDaya(data.tarifDaya), width)));
     parts.push(...encoder.encode(this.formatRow('JML KWH', `${data.kwh} kWh`, width)));
 
     parts.push(...encoder.encode(separator));
