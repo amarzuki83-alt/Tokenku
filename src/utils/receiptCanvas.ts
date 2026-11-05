@@ -68,8 +68,8 @@ function renderThermalReceipt(
   y += 22;
 
   // Subheader: Alamat Loket
-  ctx.font = '12px "Courier New", Courier, monospace';
-  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 12px "Courier New", Courier, monospace';
+  ctx.fillStyle = '#475569';
   ctx.fillText(r.alamatAgen || s.alamatAgen || 'Loket Resmi Pembayaran Listrik PLN', cx, y);
   y += 20;
 
@@ -94,17 +94,15 @@ function renderThermalReceipt(
   drawDashedLine(y);
   y += 22;
 
-  // Helper to draw 2-column table row with compact spacing
-  const drawRow = (label: string, value: string, isBold: boolean = false) => {
-    ctx.font = '13px "Courier New", Courier, monospace';
-    ctx.fillStyle = '#475569';
+  // Helper to draw 2-column table row with bold letters and numbers
+  const drawRow = (label: string, value: string, _isBold?: boolean) => {
+    ctx.font = 'bold 13px "Courier New", Courier, monospace';
+    ctx.fillStyle = '#0f172a';
     ctx.textAlign = 'left';
     ctx.fillText(label, leftX, y);
 
-    ctx.font = isBold
-      ? 'bold 13px "Courier New", Courier, monospace'
-      : '13px "Courier New", Courier, monospace';
-    ctx.fillStyle = isBold ? '#0f172a' : '#334155';
+    ctx.font = 'bold 13px "Courier New", Courier, monospace';
+    ctx.fillStyle = '#000000';
     ctx.textAlign = 'right';
     ctx.fillText(value, rightX, y);
     y += 21;
@@ -136,15 +134,15 @@ function renderThermalReceipt(
   ctx.strokeRect(boxX, y, boxW, boxH);
 
   // Box title
-  ctx.fillStyle = '#475569';
-  ctx.font = 'bold 12px "Courier New", Courier, monospace';
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 13px "Courier New", Courier, monospace';
   ctx.textAlign = 'center';
   ctx.fillText('STROOM / TOKEN PLN', cx, y + 22);
 
   // 2-Row Token Display (Big & Bold)
   const tokenParts = r.token.split('-').filter(Boolean);
   ctx.fillStyle = '#000000';
-  ctx.font = 'bold 22px "Courier New", Courier, monospace';
+  ctx.font = 'bold 24px "Courier New", Courier, monospace';
 
   if (tokenParts.length === 5) {
     const line1 = `${tokenParts[0]}-${tokenParts[1]}-${tokenParts[2]}`;
@@ -174,12 +172,12 @@ function renderThermalReceipt(
   y += 24;
 
   // TOTAL BAYAR (Extra Large Bold)
-  ctx.font = 'bold 15px "Courier New", Courier, monospace';
+  ctx.font = 'bold 16px "Courier New", Courier, monospace';
   ctx.fillStyle = '#0f172a';
   ctx.textAlign = 'left';
   ctx.fillText('TOTAL BAYAR', leftX, y);
 
-  ctx.font = 'bold 19px "Courier New", Courier, monospace';
+  ctx.font = 'bold 20px "Courier New", Courier, monospace';
   ctx.textAlign = 'right';
   ctx.fillText(formatRupiah(r.totalBayar), rightX, y);
 
@@ -187,10 +185,10 @@ function renderThermalReceipt(
   drawDashedLine(y);
   y += 26;
 
-  // Footer note
+  // Footer note (Bold)
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#64748b';
-  ctx.font = '11px "Courier New", Courier, monospace';
+  ctx.fillStyle = '#334155';
+  ctx.font = 'bold 11px "Courier New", Courier, monospace';
   const footerLines = (
     s.catatanFooter ||
     'Terima kasih atas kepercayaan Anda.\nStruk ini merupakan bukti pembayaran yang sah.'
@@ -202,8 +200,8 @@ function renderThermalReceipt(
 
   // App Watermark
   y += 8;
-  ctx.font = '10px "Courier New", Courier, monospace';
-  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 10px "Courier New", Courier, monospace';
+  ctx.fillStyle = '#64748b';
   ctx.fillText('Aplikasi tokenku PWA', cx, y);
 }
 
@@ -241,7 +239,7 @@ function renderModernReceipt(
   ctx.fillText(r.namaAgen || s.namaAgen || 'LOKET RESMI PLN', w / 2, 48);
 
   ctx.fillStyle = '#e0f2fe';
-  ctx.font = '12px system-ui, -apple-system, sans-serif';
+  ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
   ctx.fillText('Struk Pembelian Listrik Prabayar', w / 2, 72);
   ctx.fillText(r.tanggal, w / 2, 94);
 
@@ -249,17 +247,15 @@ function renderModernReceipt(
   const leftX = 26;
   const rightX = w - 26;
 
-  // Table rows
-  const drawModernRow = (label: string, value: string, isBold: boolean = false) => {
-    ctx.font = '13px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#64748b';
+  // Table rows with bold letters and numbers
+  const drawModernRow = (label: string, value: string, _isBold?: boolean) => {
+    ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = '#1e293b';
     ctx.textAlign = 'left';
     ctx.fillText(label, leftX, y);
 
-    ctx.font = isBold
-      ? 'bold 14px system-ui, -apple-system, sans-serif'
-      : '13px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = isBold ? '#0f172a' : '#334155';
+    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = '#0f172a';
     ctx.textAlign = 'right';
     ctx.fillText(value, rightX, y);
     y += 24;
@@ -289,13 +285,13 @@ function renderModernReceipt(
   ctx.fill();
 
   ctx.fillStyle = '#bae6fd';
-  ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+  ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('NOMOR STROOM / TOKEN PLN', w / 2, y + 24);
 
   const tokenParts = r.token.split('-').filter(Boolean);
   ctx.fillStyle = '#fef08a';
-  ctx.font = 'bold 23px "Courier New", Courier, monospace';
+  ctx.font = 'bold 24px "Courier New", Courier, monospace';
 
   if (tokenParts.length === 5) {
     const l1 = `${tokenParts[0]}-${tokenParts[1]}-${tokenParts[2]}`;
@@ -322,18 +318,18 @@ function renderModernReceipt(
   ctx.stroke();
 
   ctx.fillStyle = '#0369a1';
-  ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+  ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('Total Pembayaran', leftX + 14, y + 31);
 
   ctx.fillStyle = '#0c4a6e';
-  ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
+  ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText(formatRupiah(r.totalBayar), rightX - 14, y + 31);
 
   y += 74;
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '11px system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = '#475569';
+  ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
   ctx.fillText(s.catatanFooter || 'Simpan struk ini sebagai bukti pembayaran yang sah.', w / 2, y);
 }

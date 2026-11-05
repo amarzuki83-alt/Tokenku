@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 @layer utilities {
-  /* Thermal receipt font styling */
+  /* Thermal receipt font styling - bold letters and numbers */
   .font-receipt {
     font-family: 'Courier New', Courier, monospace;
     font-variant-numeric: tabular-nums;
+    font-weight: 700;
   }
 }
 
@@ -42,6 +43,7 @@
     padding: 0 !important;
     color: #000000 !important;
     font-family: 'Courier New', Courier, monospace !important;
+    font-weight: 700 !important;
     font-size: 11px !important;
     line-height: 1.25 !important;
   }

@@ -110,25 +110,25 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
     window.print();
   };
 
-  // Helper row component for Tap-to-Edit
+  // Helper row component for Tap-to-Edit with bold letters and numbers
   const EditableRow: React.FC<{
     label: string;
     value: string | number;
     field: keyof PlnReceiptData;
     isBold?: boolean;
     customRender?: React.ReactNode;
-  }> = ({ label, value, field, isBold, customRender }) => (
+  }> = ({ label, value, field, customRender }) => (
     <div
       onClick={() => onEditField(field)}
       className="group relative flex items-baseline justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-sky-500/10 cursor-pointer transition select-none"
       title={`Ketuk untuk mengedit ${label}`}
     >
-      <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+      <span className="text-xs font-bold text-slate-900 tracking-tight flex items-center gap-1">
         <span>{label}</span>
       </span>
       <div className="flex items-center gap-1.5 text-right">
         {customRender || (
-          <span className={`text-xs font-mono ${isBold ? 'font-extrabold text-slate-900' : 'text-slate-800'}`}>
+          <span className="text-xs font-mono font-black text-slate-950 tracking-normal">
             {value}
           </span>
         )}
@@ -209,16 +209,16 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 className="cursor-pointer group hover:bg-sky-500/10 p-1 rounded-md transition"
                 title="Ketuk untuk ubah nama loket"
               >
-                <h3 className="font-extrabold text-sm uppercase tracking-wide">
+                <h3 className="font-black text-sm uppercase tracking-wide text-slate-950">
                   {receipt.namaAgen || settings.namaAgen}
                 </h3>
-                <p className="text-[10px] text-slate-500 mt-0.5">
+                <p className="text-[11px] font-bold text-slate-700 mt-0.5">
                   {receipt.alamatAgen || settings.alamatAgen}
                 </p>
               </div>
 
-              <div className="mt-2 pt-2 border-t border-slate-200">
-                <span className="text-[11px] font-black tracking-wider uppercase block">
+              <div className="mt-2 pt-2 border-t-2 border-slate-300">
+                <span className="text-[12px] font-black tracking-wider uppercase block text-slate-950">
                   STRUK PEMBELIAN LISTRIK PRABAYAR
                 </span>
               </div>
@@ -308,8 +308,8 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
             </div>
 
             {/* Footer Notice */}
-            <div className="mt-4 pt-3 border-t border-dashed border-slate-300 text-center text-[10px] text-slate-500 leading-relaxed">
-              <p className="whitespace-pre-line font-mono">
+            <div className="mt-4 pt-3 border-t border-dashed border-slate-300 text-center text-[11px] text-slate-800 leading-relaxed font-bold">
+              <p className="whitespace-pre-line font-mono font-bold">
                 {settings.catatanFooter || 'Terima kasih atas kepercayaan Anda.\nStruk ini bukti pembayaran yang sah.'}
               </p>
             </div>
@@ -335,11 +335,11 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 </span>
                 <h3
                   onClick={() => onEditField('namaAgen')}
-                  className="font-extrabold text-base text-slate-900 cursor-pointer hover:text-sky-600 transition"
+                  className="font-black text-base text-slate-950 cursor-pointer hover:text-sky-600 transition"
                 >
                   {receipt.namaAgen || settings.namaAgen}
                 </h3>
-                <p className="text-[11px] text-slate-500">{receipt.tanggal}</p>
+                <p className="text-[11px] font-bold text-slate-700">{receipt.tanggal}</p>
               </div>
 
               <div className="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0">
@@ -402,8 +402,8 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="text-center mt-4 text-[10px] text-slate-400">
-              <p className="whitespace-pre-line">
+            <div className="text-center mt-4 text-[11px] font-bold text-slate-600">
+              <p className="whitespace-pre-line font-bold">
                 {settings.catatanFooter || 'Simpan struk ini sebagai bukti transaksi resmi.'}
               </p>
             </div>

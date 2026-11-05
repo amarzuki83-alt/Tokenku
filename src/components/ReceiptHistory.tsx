@@ -111,14 +111,14 @@ export const ReceiptHistory: React.FC<ReceiptHistoryProps> = ({
                     {item.namaPelanggan}
                   </h4>
 
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-mono text-slate-600">
-                    <span>Mtr: {item.noMeter}</span>
-                    <span>•</span>
-                    <span>Daya: {normalizeTarifDaya(item.tarifDaya)}</span>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-mono">
+                    <span className="font-bold text-slate-800">Mtr: {item.noMeter}</span>
+                    <span className="text-slate-400">•</span>
+                    <span className="font-bold text-slate-800">Daya: {normalizeTarifDaya(item.tarifDaya)}</span>
                   </div>
 
                   {/* Token Highlight */}
-                  <div className="mt-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 font-mono font-bold text-xs text-sky-900 inline-block tracking-wider">
+                  <div className="mt-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 font-mono font-black text-xs text-sky-950 inline-block tracking-wider">
                     {item.token}
                   </div>
                 </div>
@@ -128,7 +128,7 @@ export const ReceiptHistory: React.FC<ReceiptHistoryProps> = ({
                   <span className="text-sm font-black text-slate-900">
                     {formatRupiah(item.totalBayar)}
                   </span>
-                  <span className="text-[10px] text-slate-400 mt-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 mt-0.5">
                     Token: {formatRupiah(item.nominal)}
                   </span>
 

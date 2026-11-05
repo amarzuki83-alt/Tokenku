@@ -208,7 +208,8 @@ class BluetoothPrinterService {
     parts.push(ESC, 0x61, 0x00); // Left align
     parts.push(...encoder.encode(separator));
 
-    // 4. Metadata rows
+    // 4. Metadata rows (All in bold letters and numbers)
+    parts.push(ESC, 0x45, 0x01); // Bold ON
     parts.push(...encoder.encode(this.formatRow('TGL/JAM', data.tanggal, width)));
     parts.push(...encoder.encode(this.formatRow('NO REF', data.noRef, width)));
     parts.push(...encoder.encode(this.formatRow('NO METER', data.noMeter, width)));
@@ -216,6 +217,7 @@ class BluetoothPrinterService {
     parts.push(...encoder.encode(this.formatRow('NAMA', data.namaPelanggan, width)));
     parts.push(...encoder.encode(this.formatRow('TARIF/DAYA', normalizeTarifDaya(data.tarifDaya), width)));
     parts.push(...encoder.encode(this.formatRow('JML KWH', `${data.kwh} kWh`, width)));
+    parts.push(ESC, 0x45, 0x00); // Bold OFF
 
     parts.push(...encoder.encode(separator));
 
@@ -247,9 +249,11 @@ class BluetoothPrinterService {
     parts.push(ESC, 0x61, 0x00); // Left align
     parts.push(...encoder.encode(separator));
 
-    // 6. Payment rows
+    // 6. Payment rows (Bold)
+    parts.push(ESC, 0x45, 0x01); // Bold ON
     parts.push(...encoder.encode(this.formatRow('RP TOKEN', formatRupiah(data.nominal), width)));
     parts.push(...encoder.encode(this.formatRow('ADMIN BANK', formatRupiah(data.adminBank), width)));
+    parts.push(ESC, 0x45, 0x00); // Bold OFF
     parts.push(...encoder.encode(doubleSeparator));
 
     // Total Bayar (Bold)

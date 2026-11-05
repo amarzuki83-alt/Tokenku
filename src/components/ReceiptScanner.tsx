@@ -192,10 +192,10 @@ export const ReceiptScanner: React.FC<ReceiptScannerProps> = ({
               className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-100 bg-slate-50/70 hover:bg-sky-50/80 hover:border-sky-200 text-left transition group active:scale-[0.99]"
             >
               <div>
-                <p className="text-xs font-bold text-slate-800 group-hover:text-sky-700 transition">
+                <p className="text-xs font-bold text-slate-900 group-hover:text-sky-700 transition">
                   {sample.title}
                 </p>
-                <p className="text-[11px] text-slate-500 font-mono mt-0.5">{sample.subtitle}</p>
+                <p className="text-[11px] text-slate-700 font-mono font-bold mt-0.5">{sample.subtitle}</p>
               </div>
               <div className="w-7 h-7 rounded-xl bg-white text-slate-400 group-hover:text-sky-600 group-hover:bg-sky-100 flex items-center justify-center transition shrink-0 shadow-2xs">
                 <ArrowRight className="w-3.5 h-3.5" />
